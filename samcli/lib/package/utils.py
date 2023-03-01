@@ -14,15 +14,14 @@ from typing import Callable, Dict, List, Optional, cast
 
 import jmespath
 
-from samcli.commands.package.exceptions import ImageNotFoundError, InvalidLocalPathError
+from samcli.commands.package.exceptions import (ImageNotFoundError,
+                                                InvalidLocalPathError)
 from samcli.lib.package.ecr_utils import is_ecr_url
 from samcli.lib.package.permissions import (
     AdditiveDirPermissionPermissionMapper,
-    AdditiveFilePermissionPermissionMapper,
-    PermissionMapper,
+    AdditiveFilePermissionPermissionMapper, PermissionMapper,
     WindowsDirPermissionPermissionMapper,
-    WindowsFilePermissionPermissionMapper,
-)
+    WindowsFilePermissionPermissionMapper)
 from samcli.lib.package.s3_uploader import S3Uploader
 from samcli.lib.utils.hash import dir_checksum
 from samcli.lib.utils.resources import LAMBDA_LOCAL_RESOURCES
@@ -176,8 +175,13 @@ def upload_local_artifacts(
 
     local_path = make_abs_path(parent_dir, local_path)
 
-    # Or, pointing to a folder. Zip the folder and upload (zip_method is changed based on resource type)
     if is_local_folder(local_path):
+        files = os.listdir(local_path)
+        # Custom build methods may automatically produce a
+        # Zip.
+        if len(files) == 1 and is_zip_file(files[0]):
+            return uploader.upload_with_dedup(local_path)
+        # Or, pointing to a folder. Zip the folder and upload (zip_method is changed based on resource type)
         return zip_and_upload(
             local_path,
             uploader,
