@@ -179,8 +179,10 @@ def upload_local_artifacts(
         files = os.listdir(local_path)
         # Custom build methods may automatically produce a
         # Zip.
-        if len(files) == 1 and is_zip_file(files[0]):
-            return uploader.upload_with_dedup(local_path)
+        if len(files) == 1:
+            archive_path = os.path.join(local_path, files[0])
+            if is_zip_file(archive_path):
+                return uploader.upload_with_dedup(archive_path)
         # Or, pointing to a folder. Zip the folder and upload (zip_method is changed based on resource type)
         return zip_and_upload(
             local_path,
